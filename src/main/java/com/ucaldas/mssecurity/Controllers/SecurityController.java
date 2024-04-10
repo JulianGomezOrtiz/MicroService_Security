@@ -15,27 +15,36 @@ import java.io.IOException;
 @RequestMapping("/api/security")
 public class SecurityController {
 
-     @Autowired
-     private UserRepository theUserRepository;
+    @Autowired
+    private UserRepository theUserRepository;
 
-     @Autowired
-     private EncryptionService theEncryptionService;
+    @Autowired
+    private EncryptionService theEncryptionService;
 
-     @Autowired
-     private JwtService theJwtService;
+    @Autowired
+    private JwtService theJwtService;
 
-
-     // Busca el usuario por medio del correo
+    // Busca el usuario por medio del correo
     @PostMapping("login")
     public String login(@RequestBody User theUser, final HttpServletResponse response) throws IOException {
-        String token="";
-        User actualUser=this.theUserRepository.getUserByEmail(theUser.getEmail());
-        if(actualUser!=null){
+        String token = "";
+        User actualUser = this.theUserRepository.getUserByEmail(theUser.getEmail());
+        if (actualUser != null) {
             actualUser.getPassword().equals(this.theEncryptionService.convertSHA256(theUser.getPassword()));
-            token=this.theJwtService.generateToken(actualUser);
+            token = this.theJwtService.generateToken(actualUser);
 
-        }else{
+        } else {
             response.sendError((HttpServletResponse.SC_UNAUTHORIZED));
         }
         return token;
-    }}
+    }
+
+    @PostMapping("permisions-validation")
+    public boolean permissionsValidation(final HttpServletRequest request,
+            @RequestBody Permission ThePermission) {
+        boolean success = this.theValidatorsService.validationRolePermission(request, ThePermission.getUrl(),
+                ThePermission.getMethod());
+
+        return success;
+    }
+}
