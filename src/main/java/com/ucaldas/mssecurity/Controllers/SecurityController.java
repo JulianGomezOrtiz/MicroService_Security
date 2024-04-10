@@ -47,4 +47,21 @@ public class SecurityController {
 
         return success;
     }
+
+    @PostMapping("2FA")
+    public String second_factor(@RequestBody User theUser, final HttpServletResponse response) throws IOException {
+        String token = "";
+        User actualUser = this.theUserRepository.getUserByEmail(theUser.getEmail());
+        if (actualUser != null &&
+                actualUser.getPassword().equals(this.theEncriptionService.convertSHA256(theUser.getPassword()))) {
+            token = this.theJwtService.generateToken(actualUser);
+
+        } else {
+
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+
+        }
+        return token;
+    }
+
 }

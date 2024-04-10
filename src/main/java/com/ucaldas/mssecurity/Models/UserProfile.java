@@ -18,7 +18,7 @@ public class UserProfile {
     @DBRef
     private User User_id;
 
-    public UserProfile(String name, String phone_number, String address) {
+    public UserProfile(String name, String phone_number, String address, String city_of_residence, String last_name) {
         this.name = name;
         this.last_name = last_name;
         this.city_of_residence = city_of_residence;

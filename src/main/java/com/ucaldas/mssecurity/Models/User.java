@@ -15,7 +15,7 @@ public class User {
     private String password;
     private Date created_at = new Date();
     private boolean isBlocked = false;
-    private two_factor_code = two_factor_code;
+    private String two_factor_code;
     @DBRef
     private Role role;
 
