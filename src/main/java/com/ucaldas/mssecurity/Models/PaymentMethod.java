@@ -1,5 +1,7 @@
 package com.ucaldas.mssecurity.Models;
 
+import org.springframework.data.mongodb.core.mapping.DBRef;
+
 public class PaymentMethod {
     private String _id;
     private String name;
