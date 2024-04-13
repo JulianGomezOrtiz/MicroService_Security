@@ -39,6 +39,7 @@ public class UsersController {
                 .findById(id)
                 .orElse(null);
         return theUser;
+
     }
 
     @PutMapping("{id}")
