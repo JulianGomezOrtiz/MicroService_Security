@@ -19,6 +19,8 @@ public class User {
     private String two_factor_code;
     @DBRef
     private Role role;
+    @DBRef
+    private UserProfile userProfile;
 
     public User(String name, String email, String password) {
         this.name = name;
@@ -89,4 +91,11 @@ public class User {
         this.two_factor_code = two_factor_code;
     }
 
+    public void setUserProfile(UserProfile userProfile) {
+        this.userProfile = userProfile;
+    }
+
+    public UserProfile getUserProfile(UserProfile userProfile) {
+        return this.userProfile;
+    }
 }
