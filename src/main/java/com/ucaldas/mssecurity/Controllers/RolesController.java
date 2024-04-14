@@ -15,16 +15,36 @@ public class RolesController {
     @Autowired
     private RoleRepository theRoleRepository;
 
+    /**
+     * Metodo para listar los roles
+     * 
+     * @return listado de objetos de tipo Role
+     */
+
     @GetMapping("")
     public List<Role> findAll() {
         return this.theRoleRepository.findAll();
     }
+
+    /**
+     * Metodo para crear un rol
+     * 
+     * @param newRole Objeto de Role
+     * @return el rol guardado
+     */
 
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping
     public Role create(@RequestBody Role theNewRole) {
         return this.theRoleRepository.save(theNewRole);
     }
+
+    /**
+     * Metodo para mostrar un solo rol
+     * 
+     * @param id identificador del rol
+     * @return un objeto de tipo Role
+     */
 
     @GetMapping("{id}")
     public Role findById(@PathVariable String id) {
@@ -33,6 +53,14 @@ public class RolesController {
                 .orElse(null);
         return theRole;
     }
+
+    /**
+     * Metodo para ctualizar un rol
+     * 
+     * @param id         identificador de un rol
+     * @param theNewRole el objeto actualizado
+     * @return null || el rol
+     */
 
     @PutMapping("{id}")
     public Role update(@PathVariable String id, @RequestBody Role theNewRole) {
@@ -48,6 +76,12 @@ public class RolesController {
             return null;
         }
     }
+
+    /**
+     * Metodo para eliminar un rol
+     * 
+     * @param id identificador del rol
+     */
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("{id}")
