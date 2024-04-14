@@ -4,6 +4,7 @@ public class Permission {
     private String _id;
     private String url;
     private String method;
+    private String description;
 
     public Permission(String _id, String url, String method) {
         this._id = _id;
@@ -29,5 +30,13 @@ public class Permission {
 
     public void setMethod(String method) {
         this.method = method;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 }
