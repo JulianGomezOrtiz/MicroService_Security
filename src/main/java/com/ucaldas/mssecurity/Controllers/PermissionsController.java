@@ -27,6 +27,29 @@ public class PermissionsController {
         return this.thePermissionRepository.save(theNewPermission);
     }
 
+    @GetMapping("{id}")
+    public Permission findById(@PathVariable String id) {
+        Permission thePermission = this.thePermissionRepository
+                .findById(id)
+                .orElse(null);
+        return thePermission;
+    }
+
+    @PutMapping("{id}")
+    public Permission update(@PathVariable String id, @RequestBody Permission theNewPermission) {
+        Permission theActualPermission = this.thePermissionRepository
+                .findById(id)
+                .orElse(null);
+        if (theActualPermission != null) {
+            theActualPermission.setUrl(theNewPermission.getUrl());
+            theActualPermission.setMethod(theNewPermission.getMethod());
+
+            return this.thePermissionRepository.save(theActualPermission);
+        } else {
+            return null;
+        }
+    }
+
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("{id}")
     public void delete(@PathVariable String id) {
