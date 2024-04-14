@@ -41,6 +41,7 @@ public class RolePermissionController {
         }
     }
 
+    // Muestra un solo permiso (GET)
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("{id}")
     public void delete(@PathVariable String id) {
@@ -50,6 +51,57 @@ public class RolePermissionController {
         if (theRolePermission != null) {
             this.theRolePermissionRepository.delete(theRolePermission);
         }
+    }
+
+    // Muestra todos los permisos (GET)
+    @GetMapping("")
+    public List<RolePermission> index() {
+        return this.theRolePermissionRepository.findAll();
+    }
+
+    // Método borrar (DELETE)
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @DeleteMapping("{id}")
+    public void destroy(@PathVariable String id) {
+        RolePermission theRoleRolePermission = this.theRolePermissionRepository
+                .findById(id)
+                .orElse(null);
+        if (theRoleRolePermission != null) {
+            this.theRolePermissionRepository.delete(theRoleRolePermission);
+        }
+    }
+
+    @ResponseStatus(HttpStatus.CREATED)
+    @PostMapping("role/{role_id}/permissions")
+    public void createList(@RequestBody List<Permission> ListPermission, @PathVariable String role_id) {
+
+        for (Permission permission : ListPermission) {
+            System.out.println(permission.get_id());
+            this.create(role_id, permission.get_id());
+
+        }
+
+    }
+
+    public Permission getPermission(String url, String method) {
+        List<Permission> permissions = thePermissionRepository.findAll();
+        for (Permission permission : permissions) {
+            if (permission.getMethod().equals(method) && permission.getUrl().equals(url)) {
+                return permission;
+            }
+        }
+        return null;
+    }
+
+    // Método DELETE
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @DeleteMapping("all")
+    public void destroyAll() {
+        List<RolePermission> list = this.theRolePermissionRepository.findAll();
+        for (RolePermission rolePermission : list) {
+            this.theRolePermissionRepository.delete(rolePermission);
+        }
+
     }
 
     public PermissionRepository getThePermissionRepository() {

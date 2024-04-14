@@ -64,6 +64,11 @@ public class UsersController {
         }
     }
 
+    /**
+     * Eliminar un usuario
+     * 
+     * @param id identificador del usuario
+     */
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("{id}")
     public void delete(@PathVariable String id) {
