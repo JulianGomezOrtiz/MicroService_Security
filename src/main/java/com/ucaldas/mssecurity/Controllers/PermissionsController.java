@@ -16,13 +16,14 @@ public class PermissionsController {
     private PermissionRepository thePermissionRepository;
 
     @GetMapping("")
-    public List<Permission> findAll(){
+    public List<Permission> findAll() {
         return this.thePermissionRepository.findAll();
     }
+
     @ResponseStatus(HttpStatus.CREATED)
 
     @PostMapping
-    public Permission create(@RequestBody Permission theNewPermission){
+    public Permission create(@RequestBody Permission theNewPermission) {
         return this.thePermissionRepository.save(theNewPermission);
     }
 

@@ -12,24 +12,28 @@ import org.springframework.web.servlet.ModelAndView;
 public class SecurityInterceptor implements HandlerInterceptor {
     @Autowired
     private ValidatorsService validatorService;
+
     @Override
     public boolean preHandle(HttpServletRequest request,
-                             HttpServletResponse response,
-                             Object handler)
+            HttpServletResponse response,
+            Object handler)
             throws Exception {
-        boolean success=this.validatorService.validationRolePermission(request,request.getRequestURI(),request.getMethod());
+        boolean success = this.validatorService.validationRolePermission(request, request.getRequestURI(),
+                request.getMethod());
         return success;
     }
 
     @Override
     public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler,
-                           ModelAndView modelAndView) throws Exception {
-        // Lógica a ejecutar después de que se haya manejado la solicitud por el controlador
+            ModelAndView modelAndView) throws Exception {
+        // Lógica a ejecutar después de que se haya manejado la solicitud por el
+        // controlador
     }
 
     @Override
     public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler,
-                                Exception ex) throws Exception {
-        // Lógica a ejecutar después de completar la solicitud, incluso después de la renderización de la vista
+            Exception ex) throws Exception {
+        // Lógica a ejecutar después de completar la solicitud, incluso después de la
+        // renderización de la vista
     }
 }

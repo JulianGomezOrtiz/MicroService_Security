@@ -1,4 +1,5 @@
 package com.ucaldas.mssecurity.Models;
+
 import java.util.Date;
 import lombok.Data;
 import org.springframework.data.annotation.Id;
@@ -10,7 +11,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public class User {
     @Id
     private String _id;
-    private  String email;
+    private String email;
     private String name;
     private String password;
     private Date created_at = new Date();
@@ -40,7 +41,6 @@ public class User {
         this.password = password;
     }
 
-    
     public String get_id() {
         return _id;
     }
@@ -88,7 +88,5 @@ public class User {
     public void setTwo_factor_code(String two_factor_code) {
         this.two_factor_code = two_factor_code;
     }
-
-
 
 }

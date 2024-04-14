@@ -6,12 +6,12 @@ public class PaymentMethod {
     private String _id;
     private String name;
     private String type;
-    private  int status;
+    private int status;
 
     @DBRef
     private User User_id;
 
-    public PaymentMethod(String _id, String name, String type,int status) {
+    public PaymentMethod(String _id, String name, String type, int status) {
         this._id = _id;
         this.name = name;
         this.type = type;
@@ -45,7 +45,6 @@ public class PaymentMethod {
     public void setStatus(int status) {
         this.status = status;
     }
-
 
     public User getUser_id() {
         return User_id;

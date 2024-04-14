@@ -1,6 +1,5 @@
 package com.ucaldas.mssecurity.Services;
 
-
 import com.ucaldas.mssecurity.Models.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
@@ -14,11 +13,13 @@ import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+
 @Service
 
 public class JwtService {
     @Value("${jwt.secret}")
-    private String secret; // Esta es la clave secreta que se utiliza para firmar el token. Debe mantenerse segura.
+    private String secret; // Esta es la clave secreta que se utiliza para firmar el token. Debe mantenerse
+                           // segura.
 
     @Value("${jwt.expiration}")
     private Long expiration; // Tiempo de expiración del token en milisegundos.
@@ -33,7 +34,7 @@ public class JwtService {
         claims.put("email", theUser.getEmail());
         claims.put("role", theUser.getRole());
 
-        //genera la cadena de texto
+        // genera la cadena de texto
         return Jwts.builder()
                 .setClaims(claims)
                 .setSubject(theUser.getName())
@@ -42,6 +43,7 @@ public class JwtService {
                 .signWith(secretKey)
                 .compact();
     }
+
     public boolean validateToken(String token) {
         try {
             Jws<Claims> claimsJws = Jwts.parserBuilder()
@@ -84,6 +86,5 @@ public class JwtService {
             return null;
         }
     }
-
 
 }

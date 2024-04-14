@@ -11,7 +11,7 @@ public class UserProfile {
     @Id
     private String _id;
     private String name;
-    private  String last_name;
+    private String last_name;
     private String city_of_residence;
     private String address;
     private String phone_number;
@@ -23,7 +23,7 @@ public class UserProfile {
         this.last_name = last_name;
         this.city_of_residence = city_of_residence;
         this.address = address;
-        this.phone_number = phone_number;    
+        this.phone_number = phone_number;
     }
 
     public UserProfile() {
@@ -36,6 +36,7 @@ public class UserProfile {
     public void setLast_name(String last_name) {
         this.last_name = last_name;
     }
+
     public void setphone_number(String phone_number) {
         this.phone_number = phone_number;
     }

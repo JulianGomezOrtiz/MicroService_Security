@@ -24,6 +24,7 @@ public class RolePermissionController {
 
     @Autowired
     private RolePermissionRepository theRolePermissionRepository;
+
     @ResponseStatus(HttpStatus.CREATED)
 
     @PostMapping("/role/{roleId}/permission/{permissionId}")
@@ -31,14 +32,15 @@ public class RolePermissionController {
         Role theRole = this.theRoleRepository.findById(roleId).orElse(null);
         Permission thePermission = this.thePermissionRepository.findById(permissionId).orElse(null);
         if (theRole != null && thePermission != null) {
-            RolePermission newRolePermission=new RolePermission();
+            RolePermission newRolePermission = new RolePermission();
             newRolePermission.setRole(theRole);
             newRolePermission.setPermission(thePermission);
             return this.theRolePermissionRepository.save(newRolePermission);
-        } else{
+        } else {
             return null;
         }
     }
+
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("{id}")
     public void delete(@PathVariable String id) {
@@ -53,8 +55,9 @@ public class RolePermissionController {
     public PermissionRepository getThePermissionRepository() {
         return thePermissionRepository;
     }
+
     @GetMapping("role/{roleId}")
-    public List<RolePermission> findByRole(@PathVariable String roleId){
+    public List<RolePermission> findByRole(@PathVariable String roleId) {
         return this.theRolePermissionRepository.getPermissionByRole(roleId);
     }
 }

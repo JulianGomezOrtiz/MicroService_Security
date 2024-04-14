@@ -14,15 +14,18 @@ import java.util.List;
 public class RolesController {
     @Autowired
     private RoleRepository theRoleRepository;
+
     @GetMapping("")
-    public List<Role> findAll(){
+    public List<Role> findAll() {
         return this.theRoleRepository.findAll();
     }
+
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping
-    public Role create(@RequestBody Role theNewRole){
+    public Role create(@RequestBody Role theNewRole) {
         return this.theRoleRepository.save(theNewRole);
     }
+
     @GetMapping("{id}")
     public Role findById(@PathVariable String id) {
         Role theRole = this.theRoleRepository
@@ -45,7 +48,6 @@ public class RolesController {
             return null;
         }
     }
-
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("{id}")

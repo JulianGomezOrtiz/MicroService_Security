@@ -21,18 +21,21 @@ public class UsersController {
     private RoleRepository theRoleRepository;
     @Autowired
     private EncryptionService theEncryptionService;
-    //me va a permitir listar todos los usuarios
+
+    // me va a permitir listar todos los usuarios
     @GetMapping("")
-    public List<User> findAll(){
+    public List<User> findAll() {
         return this.theUserRepository.findAll();
     }
+
     @ResponseStatus(HttpStatus.CREATED)
 
     @PostMapping
-    public User create(@RequestBody User theNewUser){
+    public User create(@RequestBody User theNewUser) {
         theNewUser.setPassword(theEncryptionService.convertSHA256(theNewUser.getPassword()));
         return this.theUserRepository.save(theNewUser);
     }
+
     @GetMapping("{id}")
     public User findById(@PathVariable String id) {
         User theUser = this.theUserRepository
@@ -69,15 +72,15 @@ public class UsersController {
     }
 
     @PutMapping("{userId}/role/{roleId}")
-    public User matchRole(@PathVariable String userId,@PathVariable String roleId) {
+    public User matchRole(@PathVariable String userId, @PathVariable String roleId) {
         User theActualUser = this.theUserRepository
                 .findById(userId)
                 .orElse(null);
-        Role theActualRole=this.theRoleRepository
+        Role theActualRole = this.theRoleRepository
                 .findById(roleId)
                 .orElse(null);
 
-        if (theActualUser != null && theActualRole!=null) {
+        if (theActualUser != null && theActualRole != null) {
             theActualUser.setRole(theActualRole);
             return this.theUserRepository.save(theActualUser);
         } else {
@@ -86,16 +89,16 @@ public class UsersController {
     }
 
     @PutMapping("{userId}/unmatch-role/{roleId}")
-    public User unMatchRole(@PathVariable String userId,@PathVariable String roleId) {
+    public User unMatchRole(@PathVariable String userId, @PathVariable String roleId) {
         User theActualUser = this.theUserRepository
                 .findById(userId)
                 .orElse(null);
-        Role theActualRole=this.theRoleRepository
+        Role theActualRole = this.theRoleRepository
                 .findById(roleId)
                 .orElse(null);
 
         if (theActualUser != null
-                && theActualRole!=null
+                && theActualRole != null
                 && theActualUser.getRole().get_id().equals(roleId)) {
             theActualUser.setRole(null);
             return this.theUserRepository.save(theActualUser);
