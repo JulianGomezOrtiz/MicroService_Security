@@ -77,7 +77,7 @@ public class PermissionsController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("all")
     public void destroyAll() {
-        List<Permission> thePermissions = this.index();
+        List<Permission> thePermissions = this.findAll();
         for (Permission permission : thePermissions) {
             this.thePermissionRepository.delete(permission);
         }
