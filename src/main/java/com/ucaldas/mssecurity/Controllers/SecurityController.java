@@ -5,12 +5,18 @@ import com.ucaldas.mssecurity.Models.User;
 import com.ucaldas.mssecurity.Repositories.UserRepository;
 import com.ucaldas.mssecurity.Services.EncryptionService;
 import com.ucaldas.mssecurity.Services.JwtService;
+
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.ucaldas.mssecurity.Services.ValidatorsService;
+import com.ucaldas.mssecurity.Services.JSONResponsesService;
 
 import java.io.IOException;
+import java.util.Map;
 
 @CrossOrigin
 @RestController
@@ -28,6 +34,9 @@ public class SecurityController {
 
     @Autowired
     private JwtService theJwtService;
+
+    @Autowired
+    private JSONResponsesService theJsonResponsesService;
 
     // Busca el usuario por medio del correo
     @PostMapping("login")
@@ -89,19 +98,19 @@ public class SecurityController {
         }
     }
 
-/**
+    /**
      * 2do factor de autenticación
      * 
      * @param Session theSession
      */
-    
+
     @PutMapping("{id}/password")
     public ResponseEntity<Boolean> password(@PathVariable String id, @RequestBody Map<String, String> requestBody) {
         String newPassword = requestBody.get("password");
 
         User actualUser = theUserRepository.findById(id).orElse(null);
         if (actualUser != null) {
-            actualUser.setPassword(theEncryptionService.convertSHA256(newPassword);
+            actualUser.setPassword(theEncryptionService.convertSHA256(newPassword));
             theUserRepository.save(actualUser);
             return ResponseEntity.ok(true);
         } else {
@@ -167,38 +176,38 @@ public class SecurityController {
      * 
      * @param Session theSession
      */
-@PostMapping("2FA-login")
-    public ResponseEntity<?> factorAuthetication(@RequestBody Session theSession){
-        try{
-            String email = theSession.getTheUser().getEmail(); 
+    @PostMapping("2FA-login")
+    public ResponseEntity<?> factorAuthetication(@RequestBody Session theSession) {
+        try {
+            String email = theSession.getTheUser().getEmail();
             int secondFactor_token = theSession.getToken2FA();
             User theUser = theUserRepository.getUserByEmail(email);
             Session thePrincipalSession = theSessionRepository.getSessionbyUserId(email, secondFactor_token);
-            
-            if(thePrincipalSession != null){
+
+            if (thePrincipalSession != null) {
                 String token = this.theJwtService.generateToken(theUser);
                 thePrincipalSession.setToken(token);
                 this.theSessionRepository.save(thePrincipalSession);
-                this.jsonResponsesService.setData(token);
-                this.jsonResponsesService.setMessage("Se ha ingresado exitosamente, el token es:");
+                this.theJsonResponsesService.setData(token);
+                this.theJsonResponsesService.setMessage("Se ha ingresado exitosamente, el token es:");
                 return ResponseEntity.status(HttpStatus.ACCEPTED)
-                        .body(this.jsonResponsesService.getFinalJSON());
-            }else if(theUser != null){
-                this.jsonResponsesService.setMessage("Código de autenticación incorrecto.");
+                        .body(this.theJsonResponsesService.getFinalJSON());
+            } else if (theUser != null) {
+                this.theJsonResponsesService.setMessage("Código de autenticación incorrecto.");
                 return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE)
-                        .body(this.jsonResponsesService.getFinalJSON());
-            }else{
-                this.jsonResponsesService.setMessage("Correo inexistente.");
+                        .body(this.theJsonResponsesService.getFinalJSON());
+            } else {
+                this.theJsonResponsesService.setMessage("Correo inexistente.");
                 return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE)
-                        .body(this.jsonResponsesService.getFinalJSON());
+                        .body(this.theJsonResponsesService.getFinalJSON());
             }
-        }catch (Exception e){
-            this.jsonResponsesService.setData(null);
-            this.jsonResponsesService.setError(e.toString());
-            this.jsonResponsesService.setMessage("Error al buscar usuarios");
+        } catch (Exception e) {
+            this.theJsonResponsesService.setData(null);
+            this.theJsonResponsesService.setError(e.toString());
+            this.theJsonResponsesService.setMessage("Error al buscar usuarios");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(this.jsonResponsesService.getFinalJSON());
-        }
-    }
+                    .body(this.theJsonResponsesService.getFinalJSON());
+        }
+    }
 
 }
