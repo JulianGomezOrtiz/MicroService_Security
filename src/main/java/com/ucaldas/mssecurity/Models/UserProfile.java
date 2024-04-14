@@ -15,8 +15,7 @@ public class UserProfile {
     private String city_of_residence;
     private String address;
     private String phone_number;
-    @DBRef
-    private User User_id;
+
 
     public UserProfile(String name, String phone_number, String address, String city_of_residence, String last_name) {
         this.name = name;
@@ -71,14 +70,6 @@ public class UserProfile {
 
     public String getCity_of_residence() {
         return city_of_residence;
-    }
-
-    public User getUser_id() {
-        return User_id;
-    }
-
-    public void setUser_id(User User_id) {
-        this.User_id = User_id;
     }
 
 }

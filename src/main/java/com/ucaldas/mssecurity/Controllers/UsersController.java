@@ -2,7 +2,9 @@ package com.ucaldas.mssecurity.Controllers;
 
 import com.ucaldas.mssecurity.Models.Role;
 import com.ucaldas.mssecurity.Models.User;
+import com.ucaldas.mssecurity.Models.UserProfile;
 import com.ucaldas.mssecurity.Repositories.RoleRepository;
+import com.ucaldas.mssecurity.Repositories.UserProfileRepository;
 import com.ucaldas.mssecurity.Repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -21,6 +23,8 @@ public class UsersController {
     private RoleRepository theRoleRepository;
     @Autowired
     private EncryptionService theEncryptionService;
+    @Autowired
+    private UserProfileRepository theUserProfileRepository;
 
     // me va a permitir listar todos los usuarios
     @GetMapping("")
@@ -105,7 +109,42 @@ public class UsersController {
         } else {
             return null;
         }
+    }
 
+    @PutMapping("{userId}/UserProfile/{userProfileId}")
+    public User matchUserProfile(@PathVariable String userId, @PathVariable String userProfileId) {
+        User theActualUser = this.theUserRepository
+                .findById(userId)
+                .orElse(null);
+        UserProfile theActualUserProfile = this.theUserProfileRepository
+                .findById(userProfileId)
+                .orElse(null);
+
+        if (theActualUser != null && theActualUserProfile != null) {
+            theActualUser.setUserProfile(theActualUserProfile);
+            return this.theUserRepository.save(theActualUser);
+        } else {
+            return null;
+        }
+    }
+
+    @PutMapping("{userId}/unmatch-userProfile/{userProfileIdId}")
+    public User unMatchUserProfile(@PathVariable String userId, @PathVariable String userProfileId) {
+        User theActualUser = this.theUserRepository
+                .findById(userId)
+                .orElse(null);
+        UserProfile theActualUserProfile = this.theUserProfileRepository
+                .findById(userProfileId)
+                .orElse(null);
+
+        if (theActualUser != null
+                && theActualUserProfile != null
+                && theActualUser.getUserProfile().get_id().equals(userProfileId)) {
+            theActualUser.setUserProfile(null);
+            return this.theUserRepository.save(theActualUser);
+        } else {
+            return null;
+        }
     }
 
 }
