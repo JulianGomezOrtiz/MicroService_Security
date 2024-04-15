@@ -1,13 +1,18 @@
 package com.ucaldas.mssecurity.Controllers;
 
 import com.ucaldas.mssecurity.Models.Permission;
+import com.ucaldas.mssecurity.Models.Session;
 import com.ucaldas.mssecurity.Models.User;
 import com.ucaldas.mssecurity.Repositories.UserRepository;
+import com.ucaldas.mssecurity.Repositories.SessionRepository;
+
 import com.ucaldas.mssecurity.Services.EncryptionService;
 import com.ucaldas.mssecurity.Services.JwtService;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+
+import org.apache.el.stream.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +22,7 @@ import com.ucaldas.mssecurity.Services.JSONResponsesService;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.Optional;
 
 @CrossOrigin
 @RestController
@@ -37,6 +43,9 @@ public class SecurityController {
 
     @Autowired
     private JSONResponsesService theJsonResponsesService;
+
+    @Autowired
+    private SessionRepository theSessionRepository;
 
     // Busca el usuario por medio del correo
     @PostMapping("login")
@@ -72,7 +81,7 @@ public class SecurityController {
     public ResponseEntity<Integer> getSessionCode(@RequestParam String email) {
         User actualUser = theUserRepository.getUserByEmail(email);
         if (actualUser != null) {
-            Optional<Session> userSessionOpt = sessionRepository.findByUserAndActive(actualUser, true);
+            java.util.Optional<Session> userSessionOpt = theSessionRepository.findByUserAndActive(actualUser, true);
             if (userSessionOpt.isPresent()) {
                 return ResponseEntity.ok(userSessionOpt.get().getCode());
             }
@@ -80,18 +89,18 @@ public class SecurityController {
         return ResponseEntity.status(HttpServletResponse.SC_NOT_FOUND).body(null);
     }
 
-    @PostMapping("verifyCode2")
-    public ResponseEntity<Boolean> verifyCode2(@RequestBody Map<String, Object> requestBody) {
+    @PostMapping("verifyCode")
+    public ResponseEntity<Boolean> verifyCode(@RequestBody Map<String, Object> requestBody) {
         String email = (String) requestBody.get("email");
-        String code = (String) requestBody.get("code");
+        int code = (Integer) requestBody.get("code");
 
         User actualUser = theUserRepository.getUserByEmail(email);
         if (actualUser == null) {
             return ResponseEntity.status(HttpServletResponse.SC_NOT_FOUND).body(false);
-        }
+        }   
 
-        Optional<Session> userSessionOpt = sessionRepository.findByUserAndActive(actualUser, false);
-        if (userSessionOpt.isPresent() && Integer.toString(userSessionOpt.get().getCode()).equals(code)) {
+        java.util.Optional<Session> userSessionOpt = theSessionRepository.findByUserAndActive(actualUser, true);
+        if (userSessionOpt.isPresent() && userSessionOpt.get().getCode() == code) {
             return ResponseEntity.ok(true);
         } else {
             return ResponseEntity.ok(false);
@@ -179,7 +188,7 @@ public class SecurityController {
     @PostMapping("2FA-login")
     public ResponseEntity<?> factorAuthetication(@RequestBody Session theSession) {
         try {
-            String email = theSession.getTheUser().getEmail();
+            String email = theSession.getUser().getEmail();
             int secondFactor_token = theSession.getToken2FA();
             User theUser = theUserRepository.getUserByEmail(email);
             Session thePrincipalSession = theSessionRepository.getSessionbyUserId(email, secondFactor_token);

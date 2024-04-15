@@ -36,7 +36,7 @@ public class PermissionsController {
     }
 
     @PutMapping("{id}")
-    public Permission update(@PathVariable String id, @RequestBody Permission theNewPermission) {
+    public Permission updatePermission(@PathVariable String id, @RequestBody Permission theNewPermission) {
         Permission theActualPermission = this.thePermissionRepository
                 .findById(id)
                 .orElse(null);
