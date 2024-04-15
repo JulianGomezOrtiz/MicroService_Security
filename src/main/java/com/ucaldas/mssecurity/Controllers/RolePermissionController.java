@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @CrossOrigin
@@ -25,12 +26,13 @@ public class RolePermissionController {
     @Autowired
     private RolePermissionRepository theRolePermissionRepository;
 
+    // Método POST
     @ResponseStatus(HttpStatus.CREATED)
-
-    @PostMapping("/role/{roleId}/permission/{permissionId}")
-    public RolePermission create(@PathVariable String roleId, @PathVariable String permissionId) {
-        Role theRole = this.theRoleRepository.findById(roleId).orElse(null);
-        Permission thePermission = this.thePermissionRepository.findById(permissionId).orElse(null);
+    @PostMapping("role/{role_id}/permission/{permission_id}")
+    public RolePermission store(@PathVariable String role_id,
+            @PathVariable String permission_id) {
+        Role theRole = theRoleRepository.findById(role_id).orElse(null);
+        Permission thePermission = thePermissionRepository.findById(permission_id).orElse(null);
         if (theRole != null && thePermission != null) {
             RolePermission newRolePermission = new RolePermission();
             newRolePermission.setRole(theRole);
@@ -41,25 +43,22 @@ public class RolePermissionController {
         }
     }
 
-    // Muestra un solo permiso (GET)
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    @DeleteMapping("{id}")
-    public void delete(@PathVariable String id) {
+    // Método GET (UNO)
+    @GetMapping("{id}")
+    public RolePermission show(@PathVariable String id) {
         RolePermission theRolePermission = this.theRolePermissionRepository
                 .findById(id)
                 .orElse(null);
-        if (theRolePermission != null) {
-            this.theRolePermissionRepository.delete(theRolePermission);
-        }
+        return theRolePermission;
     }
 
-    // Muestra todos los permisos (GET)
+    // Método GET (TODOS)
     @GetMapping("")
     public List<RolePermission> index() {
         return this.theRolePermissionRepository.findAll();
     }
 
-    // Método borrar (DELETE)
+    // Método DELETE
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("{id}")
     public void destroy(@PathVariable String id) {
@@ -73,14 +72,14 @@ public class RolePermissionController {
 
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("role/{role_id}/permissions")
-    public void createList(@RequestBody List<Permission> ListPermission, @PathVariable String role_id) {
-
+    public List<RolePermission> storeList(@RequestBody List<Permission> ListPermission, @PathVariable String role_id) {
+        List<RolePermission> savedRolePermissions = new ArrayList<>();
         for (Permission permission : ListPermission) {
             System.out.println(permission.get_id());
-            this.create(role_id, permission.get_id());
-
+            RolePermission savedPermission = this.store(role_id, permission.get_id());
+            savedRolePermissions.add(savedPermission);
         }
-
+        return savedRolePermissions;
     }
 
     public Permission getPermission(String url, String method) {
@@ -102,14 +101,5 @@ public class RolePermissionController {
             this.theRolePermissionRepository.delete(rolePermission);
         }
 
-    }
-
-    public PermissionRepository getThePermissionRepository() {
-        return thePermissionRepository;
-    }
-
-    @GetMapping("role/{roleId}")
-    public List<RolePermission> findByRole(@PathVariable String roleId) {
-        return this.theRolePermissionRepository.getPermissionByRole(roleId);
     }
 }

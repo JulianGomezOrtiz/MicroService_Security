@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @CrossOrigin
@@ -15,50 +16,38 @@ public class PermissionsController {
     @Autowired
     private PermissionRepository thePermissionRepository;
 
+    /**
+     * Listado de permisos
+     * 
+     * @return listado de objetos de tipo Permission
+     */
     @GetMapping("")
-    public List<Permission> findAll() {
+    public List<Permission> index() {
         return this.thePermissionRepository.findAll();
     }
 
+    /**
+     * Crear un permiso
+     * 
+     * @param newPermission Objeto de Permission
+     * @return el permiso guardado
+     */
     @ResponseStatus(HttpStatus.CREATED)
-
     @PostMapping
-    public Permission create(@RequestBody Permission theNewPermission) {
-        return this.thePermissionRepository.save(theNewPermission);
+    public Permission store(@RequestBody Permission newPermission) {
+        return this.thePermissionRepository.save(newPermission);
     }
 
-    @GetMapping("{id}")
-    public Permission findById(@PathVariable String id) {
-        Permission thePermission = this.thePermissionRepository
-                .findById(id)
-                .orElse(null);
-        return thePermission;
-    }
-
-    @PutMapping("{id}")
-    public Permission updatePermission(@PathVariable String id, @RequestBody Permission theNewPermission) {
-        Permission theActualPermission = this.thePermissionRepository
-                .findById(id)
-                .orElse(null);
-        if (theActualPermission != null) {
-            theActualPermission.setUrl(theNewPermission.getUrl());
-            theActualPermission.setMethod(theNewPermission.getMethod());
-
-            return this.thePermissionRepository.save(theActualPermission);
-        } else {
-            return null;
+    @ResponseStatus(HttpStatus.CREATED)
+    @PostMapping("list")
+    public List<Permission> storeList(@RequestBody List<Permission> ListPermission) {
+        List<Permission> savedPermissions = new ArrayList<>();
+        for (Permission permission : ListPermission) {
+            Permission savedPermission = this.thePermissionRepository.save(permission);
+            savedPermissions.add(savedPermission);
         }
-    }
-
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    @DeleteMapping("{id}")
-    public void delete(@PathVariable String id) {
-        Permission thePermission = this.thePermissionRepository
-                .findById(id)
-                .orElse(null);
-        if (thePermission != null) {
-            this.thePermissionRepository.delete(thePermission);
-        }
+        ;
+        return savedPermissions;
     }
 
     /**
@@ -100,7 +89,7 @@ public class PermissionsController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("all")
     public void destroyAll() {
-        List<Permission> thePermissions = this.findAll();
+        List<Permission> thePermissions = this.index();
         for (Permission permission : thePermissions) {
             this.thePermissionRepository.delete(permission);
         }
