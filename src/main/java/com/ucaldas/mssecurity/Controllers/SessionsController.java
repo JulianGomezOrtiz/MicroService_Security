@@ -13,7 +13,7 @@ import java.util.List;
 
 @CrossOrigin
 @RestController
-@RequestMapping("/private/sessions")
+@RequestMapping("/sessions")
 public class SessionsController {
 
     @Autowired

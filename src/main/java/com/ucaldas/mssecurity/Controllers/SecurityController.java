@@ -13,11 +13,11 @@ import jakarta.servlet.http.HttpServletResponse;
 
 //import org.apache.el.stream.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import com.ucaldas.mssecurity.Services.ValidatorsService;
 import com.ucaldas.mssecurity.Services.JSONResponsesService;
+import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
 import java.util.*;
@@ -26,7 +26,7 @@ import java.util.Optional;
 
 @CrossOrigin
 @RestController
-@RequestMapping("/api/security")
+@RequestMapping("/api/public/security")
 public class SecurityController {
 
     @Autowired
@@ -47,25 +47,139 @@ public class SecurityController {
     @Autowired
     private SessionRepository theSessionRepository;
 
-    // Busca el usuario por medio del correo
-    @PostMapping("login")
-    public String login(@RequestBody User theUser, final HttpServletResponse response) throws IOException {
-        String token = "";
-        User actualUser = this.theUserRepository.getUserByEmail(theUser.getEmail());
-        if (actualUser != null) {
-            actualUser.getPassword().equals(this.theEncryptionService.convertSHA256(theUser.getPassword()));
-            token = this.theJwtService.generateToken(actualUser);
 
-        } else {
-            response.sendError((HttpServletResponse.SC_UNAUTHORIZED));
+
+    @PostMapping("login")
+    public ResponseEntity<?> logins(@RequestBody User theUser, final HttpServletResponse response) {
+        User actualUser;
+        try {
+             actualUser = this.theUserRepository.getUserByEmail(theUser.getEmail());
+            if (actualUser != null && actualUser.getPassword().equals(this.theEncryptionService.convertSHA256(theUser.getPassword()))) {
+                // Crear y guardar la sesión
+                int code = generateCode();
+                System.out.println(code);
+                Session userSession = new Session(true, code);
+                userSession.setUser(actualUser);
+                theSessionRepository.save(userSession);
+
+                RestTemplate restTemplate= new RestTemplate();
+                String url = "http://localhost:5000/" + "send_2FAC";
+                HttpHeaders headers = new HttpHeaders();
+                headers.setContentType(MediaType.APPLICATION_JSON);
+                String requestBody = "{\"email\":\"" + actualUser.getEmail() +"\",\"code\":\"" + code + "\"}";
+                HttpEntity<String> requestEntity = new HttpEntity<>(requestBody,headers);
+                ResponseEntity<String> res = restTemplate.postForEntity(url, requestEntity, String.class);
+
+
+            } else {
+                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Credenciales inválidas");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error en el inicio de sesión: " + e.getMessage());
         }
-        return token;
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body("Codigo enviado a: "+actualUser.getEmail());
     }
+
+    private int generateCode() {
+        Random random = new Random();
+        return 1000 + random.nextInt(9000); // el code va a estar entre 1000 y 9999
+    }
+
+
+    @GetMapping("getSessionCode")
+    public ResponseEntity<Integer> getSessionCode(@RequestParam String email) {
+        User actualUser = theUserRepository.getUserByEmail(email);
+        if (actualUser != null) {
+            Optional<Session> userSessionOpt = theSessionRepository.findByUserAndActive(actualUser, true);
+            if (userSessionOpt.isPresent()) {
+                return ResponseEntity.ok(userSessionOpt.get().getCode());
+            }
+        }
+        return ResponseEntity.status(HttpServletResponse.SC_NOT_FOUND).body(null);
+    }
+
+    @PostMapping("verifyCode2FA")
+    public ResponseEntity<?> verifyCode2FA(@RequestBody Map<String, Object> requestBody) {
+        String email = (String) requestBody.get("email");
+        int code = (Integer) requestBody.get("code");
+        // HACE FALTA TENER EN CUENTA CUANDO EL USUARIO NO ENVIE LOS PARAMETROS REQUERIDOS: EMAIL, CODE
+        User actualUser = theUserRepository.getUserByEmail(email);
+        if (actualUser == null) {
+            return ResponseEntity.status(HttpServletResponse.SC_NOT_FOUND).body(false);
+        }
+
+        Optional<Session> userSessionOpt = theSessionRepository.findByUserAndActive(actualUser, true);
+        if (userSessionOpt.isPresent() && userSessionOpt.get().getCode() == code) {
+            String token = "";
+            
+            if (actualUser != null) {
+                token = theJwtService.generateToken(actualUser);
+            } else {
+                return ResponseEntity.ok("Error al obtener usuario");
+            }
+            return ResponseEntity.ok(token);
+            // return ResponseEntity.ok("Código válido");
+        } else {
+            return ResponseEntity.ok("Código Incorrecto");
+        }
+    }
+
+    @PostMapping("reset-password")
+    public ResponseEntity<?> resetPassword(@RequestBody Map<String, String> requestBody) {
+        String email = requestBody.get("email");
+        User user = theUserRepository.getUserByEmail(email);
+        if (user == null) {
+            return ResponseEntity.status(HttpServletResponse.SC_NOT_FOUND).body("Usuario no encontrado");
+        }
+
+        // Generar código de verificación
+        int verificationCode = generateCode();
+
+        // Guardar código de verificación en la sesión del usuario
+        Session userSession = new Session(false, verificationCode);
+        userSession.setUser(user);
+        theSessionRepository.save(userSession);
+
+        // Enviar código de verificación por correo electrónico
+        RestTemplate restTemplate = new RestTemplate();
+        String url = "http://localhost:5000/" + "send_reset-password_code";
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        String requestBodyEmail = "{\"email\":\"" + user.getEmail() + "\",\"code\":\"" + verificationCode + "\"}";
+        HttpEntity<String> requestEntity = new HttpEntity<>(requestBodyEmail, headers);
+        ResponseEntity<String> res = restTemplate.postForEntity(url, requestEntity, String.class);
+
+        return ResponseEntity.status(HttpStatus.OK).body("Código de verificación enviado a " + user.getEmail());
+    }
+
+    @PostMapping("change-password")
+    public ResponseEntity<?> changePassword(@RequestBody Map<String, Object> requestBody) {
+        String email = (String) requestBody.get("email");
+        int verificationCode = (Integer) requestBody.get("code");
+        String newPassword = (String) requestBody.get("newPassword");
+
+        User user = theUserRepository.getUserByEmail(email);
+        if (user == null) {
+            return ResponseEntity.status(HttpServletResponse.SC_NOT_FOUND).body("Usuario no encontrado");
+        }
+
+        Optional<Session> userSessionOpt = theSessionRepository.findByUserAndActive(user, false);
+        if (userSessionOpt.isPresent() && userSessionOpt.get().getCode() == verificationCode) {
+            user.setPassword(theEncryptionService.convertSHA256(newPassword));
+            theUserRepository.save(user);
+            return ResponseEntity.ok("Contraseña cambiada exitosamente");
+        } else {
+            return ResponseEntity.status(HttpServletResponse.SC_BAD_REQUEST).body("Código de verificación incorrecto");
+        }
+    }
+
 
     /**
      * Validacion de permisos
      * 
-     * @param Session theSession
+     * @param
      */
 
     @PostMapping("permisions-validation")
@@ -77,148 +191,10 @@ public class SecurityController {
         return success;
     }
 
-    @GetMapping("getSessionCode")
-    public ResponseEntity<Integer> getSessionCode(@RequestParam String email) {
-        User actualUser = theUserRepository.getUserByEmail(email);
-        if (actualUser != null) {
-            Optional<Session> userSessionOpt = theSessionRepository.findByUserAndActive(actualUser, true);
-
-            if (userSessionOpt.isPresent()) {
-                return ResponseEntity.ok(userSessionOpt.get().getCode());
-            }
-        }
-        return ResponseEntity.status(HttpServletResponse.SC_NOT_FOUND).body(null);
-    }
-
-    @PostMapping("verifyCode2")
-    public ResponseEntity<Boolean> verifyCode2(@RequestBody Map<String, Object> requestBody) {
-        String email = (String) requestBody.get("email");
-        String code = (String) requestBody.get("code");
-
-        User actualUser = theUserRepository.getUserByEmail(email);
-        if (actualUser == null) {
-            return ResponseEntity.status(HttpServletResponse.SC_NOT_FOUND).body(false);
-        }
-
-        Optional<Session> userSessionOpt = theSessionRepository.findByUserAndActive(actualUser, false);
-        if (userSessionOpt.isPresent() && Integer.toString(userSessionOpt.get().getCode()).equals(code)) {
-            return ResponseEntity.ok(true);
-        } else {
-            return ResponseEntity.ok(false);
-        }
-    }
-
-    /**
-     * 2do factor de autenticación
-     * 
-     * @param Session theSession
-     */
-
-    @PutMapping("{id}/password")
-    public ResponseEntity<Boolean> password(@PathVariable String id, @RequestBody Map<String, String> requestBody) {
-        String newPassword = requestBody.get("password");
-
-        User actualUser = theUserRepository.findById(id).orElse(null);
-        if (actualUser != null) {
-            actualUser.setPassword(theEncryptionService.convertSHA256(newPassword));
-            theUserRepository.save(actualUser);
-            return ResponseEntity.ok(true);
-        } else {
-            return ResponseEntity.status(HttpServletResponse.SC_NOT_FOUND).body(false);
-        }
-    }
-
-    /**
-     * cambio de contraseña
-     * 
-     * @param user theUser, HttpServletResponse response
-     */
-
-    @PostMapping("changePassword")
-    public String changePassword(@RequestBody User theUser, final HttpServletResponse response) throws IOException {
-        String validation = "";
-        User actualUser = this.theUserRepository.getUserByEmail(theUser.getEmail());
-        if (actualUser != null) {
-            validation = actualUser.get_id();
-
-        } else {
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
-        }
-        return validation;
-    }
-
-    /**
-     * validación de token
-     * 
-     * @param request
-     */
-
     @GetMapping("token-validation")
     public User tokenValidation(final HttpServletRequest request) {
         User theUser = this.theValidatorsService.getUser(request);
         return theUser;
-    }
-
-    /**
-     * 2do factor de autenticación
-     * 
-     * @param user theUser, HttpServletResponse response
-     */
-
-    @PostMapping("2FA")
-    public String second_factor(@RequestBody User theUser, final HttpServletResponse response) throws IOException {
-        String token = "";
-        User actualUser = this.theUserRepository.getUserByEmail(theUser.getEmail());
-        if (actualUser != null &&
-                actualUser.getPassword().equals(this.theEncryptionService.convertSHA256(theUser.getPassword()))) {
-            token = this.theJwtService.generateToken(actualUser);
-
-        } else {
-
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
-
-        }
-        return token;
-    }
-
-    /**
-     * 2do factor de autenticación
-     * 
-     * @param Session theSession
-     */
-    @PostMapping("2FA-login")
-    public ResponseEntity<?> factorAuthetication(@RequestBody Session theSession) {
-        try {
-            String email = theSession.getUser().getEmail();
-            // int secondFactor_token = theSession. .getToken2FA();
-            User theUser = theUserRepository.getUserByEmail(email);
-            String secondFactor_token = theJwtService.generateToken(theUser);
-            Session thePrincipalSession = theSessionRepository.findByUser_Id(theSession.get_id()).get(0);
-
-            if (thePrincipalSession != null) {
-                String token = this.theJwtService.generateToken(theUser);
-                thePrincipalSession.setCode(Integer.parseInt(token));
-                this.theSessionRepository.save(thePrincipalSession);
-                this.theJsonResponsesService.setData(token);
-                this.theJsonResponsesService.setMessage("Se ha ingresado exitosamente, el token es:");
-                return ResponseEntity.status(HttpStatus.ACCEPTED)
-                        .body(this.theJsonResponsesService.getFinalJSON());
-            } else if (theUser != null) {
-                this.theJsonResponsesService.setMessage("Código de autenticación incorrecto.");
-                return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE)
-                        .body(this.theJsonResponsesService.getFinalJSON());
-            } else {
-                this.theJsonResponsesService.setMessage("Correo inexistente.");
-                return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE)
-                        .body(this.theJsonResponsesService.getFinalJSON());
-            }
-        } catch (Exception e) {
-            this.theJsonResponsesService.setData(null);
-            this.theJsonResponsesService.setError(e.toString());
-            this.theJsonResponsesService.setMessage("Error al buscar usuarios");
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(this.theJsonResponsesService.getFinalJSON());
-        }
     }
 
 }

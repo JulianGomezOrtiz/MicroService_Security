@@ -6,8 +6,10 @@ import com.ucaldas.mssecurity.Models.RolePermission;
 import com.ucaldas.mssecurity.Repositories.PermissionRepository;
 import com.ucaldas.mssecurity.Repositories.RolePermissionRepository;
 import com.ucaldas.mssecurity.Repositories.RoleRepository;
+import com.ucaldas.mssecurity.Services.JSONResponsesService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -19,87 +21,132 @@ import java.util.List;
 public class RolePermissionController {
     @Autowired
     private RoleRepository theRoleRepository;
-
     @Autowired
     private PermissionRepository thePermissionRepository;
-
     @Autowired
     private RolePermissionRepository theRolePermissionRepository;
+    @Autowired
+    private JSONResponsesService theJsonResponse;
 
-    // Método POST
     @ResponseStatus(HttpStatus.CREATED)
-    @PostMapping("role/{role_id}/permission/{permission_id}")
-    public RolePermission store(@PathVariable String role_id,
-            @PathVariable String permission_id) {
-        Role theRole = theRoleRepository.findById(role_id).orElse(null);
-        Permission thePermission = thePermissionRepository.findById(permission_id).orElse(null);
-        if (theRole != null && thePermission != null) {
-            RolePermission newRolePermission = new RolePermission();
-            newRolePermission.setRole(theRole);
-            newRolePermission.setPermission(thePermission);
-            return this.theRolePermissionRepository.save(newRolePermission);
-        } else {
-            return null;
+    @PostMapping("role/{roleId}/permission/{permissionId}")
+    public ResponseEntity<?> create(@PathVariable String roleId, @PathVariable String permissionId) {
+        RolePermission theRolePermission = this.theRolePermissionRepository.getRolePermission(roleId, permissionId);
+        System.out.println(theRolePermission);
+        Role theRole = this.theRoleRepository
+                .findById(roleId)
+                .orElse(null);
+        Permission thePermission = this.thePermissionRepository
+                .findById(permissionId)
+                .orElse(null);
+        try {
+            if (theRolePermission != null) {
+                this.theJsonResponse.setMessage("El permiso para este rol ya existe");
+                return ResponseEntity.status(HttpStatus.OK).body(this.theJsonResponse.getFinalJSON());
+            }
+            if (theRole != null && thePermission != null && theRolePermission == null) {
+                RolePermission newRolePermission = new RolePermission();
+                newRolePermission.setRole(theRole);
+                newRolePermission.setPermission(thePermission);
+                this.theRolePermissionRepository.save(newRolePermission);
+                this.theJsonResponse.setData(newRolePermission);
+                this.theJsonResponse.setMessage("Se ha creado el permiso para el rol");
+                return ResponseEntity.status(HttpStatus.OK).body(this.theJsonResponse.getFinalJSON());
+            } else {
+                this.theJsonResponse.setMessage("El rol o el permiso no existen");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(this.theJsonResponse.getFinalJSON());
+            }
+        } catch (Exception e) {
+            this.theJsonResponse.setData(null);
+            this.theJsonResponse.setMessage("Error al crear el permiso de el rol");
+            this.theJsonResponse.setError(e.toString());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(this.theJsonResponse.getFinalJSON());
         }
     }
 
-    // Método GET (UNO)
-    @GetMapping("{id}")
-    public RolePermission show(@PathVariable String id) {
+    @PutMapping("role/{roleId}/permission/{permissionId}")
+    public ResponseEntity<?> update(@PathVariable String roleId, @PathVariable String permissionId) {
+        Role theRole = this.theRoleRepository
+                .findById(roleId)
+                .orElse(null);
+        Permission thePermission = this.thePermissionRepository
+                .findById(permissionId)
+                .orElse(null);
+        RolePermission theRolePermission = this.theRolePermissionRepository.getRolePermission(roleId, permissionId);
+        try {
+            if (theRolePermission == null) {
+                this.theJsonResponse.setMessage("El permiso de este rol no existe");
+                return ResponseEntity.status(HttpStatus.OK).body(this.theJsonResponse.getFinalJSON());
+            }
+            if (theRole != null && thePermission != null && theRolePermission != null) {
+                RolePermission newRolePermission = new RolePermission();
+                newRolePermission.setRole(theRole);
+                newRolePermission.setPermission(thePermission);
+                this.theRolePermissionRepository.save(newRolePermission);
+                this.theJsonResponse.setData(newRolePermission);
+                this.theJsonResponse.setMessage("Se ha actulizado el permiso del rol");
+                return ResponseEntity.status(HttpStatus.OK).body(this.theJsonResponse.getFinalJSON());
+            } else {
+                this.theJsonResponse.setMessage("El rol o el permiso no existen");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(this.theJsonResponse.getFinalJSON());
+            }
+        } catch (Exception e) {
+            this.theJsonResponse.setData(null);
+            this.theJsonResponse.setMessage("Error al actualizar el permiso de el rol");
+            this.theJsonResponse.setError(e.toString());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(this.theJsonResponse.getFinalJSON());
+        }
+    }
+
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @DeleteMapping("{id}")
+    public ResponseEntity<?> delete(@PathVariable String id) {
         RolePermission theRolePermission = this.theRolePermissionRepository
                 .findById(id)
                 .orElse(null);
-        return theRolePermission;
-    }
-
-    // Método GET (TODOS)
-    @GetMapping("")
-    public List<RolePermission> index() {
-        return this.theRolePermissionRepository.findAll();
-    }
-
-    // Método DELETE
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    @DeleteMapping("{id}")
-    public void destroy(@PathVariable String id) {
-        RolePermission theRoleRolePermission = this.theRolePermissionRepository
-                .findById(id)
-                .orElse(null);
-        if (theRoleRolePermission != null) {
-            this.theRolePermissionRepository.delete(theRoleRolePermission);
-        }
-    }
-
-    @ResponseStatus(HttpStatus.CREATED)
-    @PostMapping("role/{role_id}/permissions")
-    public List<RolePermission> storeList(@RequestBody List<Permission> ListPermission, @PathVariable String role_id) {
-        List<RolePermission> savedRolePermissions = new ArrayList<>();
-        for (Permission permission : ListPermission) {
-            System.out.println(permission.get_id());
-            RolePermission savedPermission = this.store(role_id, permission.get_id());
-            savedRolePermissions.add(savedPermission);
-        }
-        return savedRolePermissions;
-    }
-
-    public Permission getPermission(String url, String method) {
-        List<Permission> permissions = thePermissionRepository.findAll();
-        for (Permission permission : permissions) {
-            if (permission.getMethod().equals(method) && permission.getUrl().equals(url)) {
-                return permission;
+        try {
+            if (theRolePermission != null) {
+                this.theRolePermissionRepository.delete(theRolePermission);
+                this.theJsonResponse.setData(theRolePermission);
+                this.theJsonResponse.setMessage("Se ha eliminado el permiso para el rol");
+                return ResponseEntity.status(HttpStatus.OK).body(this.theJsonResponse.getFinalJSON());
+            } else {
+                this.theJsonResponse.setMessage("No se encontró el permiso o el rol, para eliminar el permiso del rol");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(this.theJsonResponse.getFinalJSON());
             }
+        } catch (Exception e) {
+            this.theJsonResponse.setData(null);
+            this.theJsonResponse.setMessage("Error al buscar el permiso a eliminar del rol.");
+            this.theJsonResponse.setError(e.toString());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(this.theJsonResponse.getFinalJSON());
         }
-        return null;
     }
 
-    // Método DELETE
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    @DeleteMapping("all")
-    public void destroyAll() {
-        List<RolePermission> list = this.theRolePermissionRepository.findAll();
-        for (RolePermission rolePermission : list) {
-            this.theRolePermissionRepository.delete(rolePermission);
+    @GetMapping("role/{roleId}")
+    public ResponseEntity<?> findByRole(@PathVariable String roleId) {
+        Role theRole = this.theRoleRepository
+                .findById(roleId)
+                .orElse(null);
+        try {
+            if (theRole != null) {
+                List<RolePermission> permissions = theRolePermissionRepository.getPermissionByRole(roleId);
+                if (permissions.size() == 0) {
+                    this.theJsonResponse.setMessage("Este rol no tiene permisos asignados");
+                    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(this.theJsonResponse.getFinalJSON());
+                } else {
+                    this.theJsonResponse.setData(permissions);
+                    this.theJsonResponse.setMessage("Los permisos de este rol han sido encontrados");
+                    return ResponseEntity.status(HttpStatus.OK).body(this.theJsonResponse.getFinalJSON());
+                }
+            } else {
+                this.theJsonResponse.setMessage("No se encontró el rol");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(this.theJsonResponse.getFinalJSON());
+            }
+        } catch (Exception e) {
+            this.theJsonResponse.setData(null);
+            this.theJsonResponse.setMessage("Error al buscar los permisos del rol.");
+            this.theJsonResponse.setError(e.toString());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(this.theJsonResponse.getFinalJSON());
         }
-
     }
 }
