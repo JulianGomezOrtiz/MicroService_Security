@@ -1,8 +1,10 @@
 package com.ucaldas.mssecurity.Controllers;
 
+import com.ucaldas.mssecurity.Models.Fidelidad;
 import com.ucaldas.mssecurity.Models.Role;
 import com.ucaldas.mssecurity.Models.User;
 import com.ucaldas.mssecurity.Models.UserProfile;
+import com.ucaldas.mssecurity.Repositories.FidelidadRepository;
 import com.ucaldas.mssecurity.Repositories.RoleRepository;
 import com.ucaldas.mssecurity.Repositories.UserProfileRepository;
 import com.ucaldas.mssecurity.Repositories.UserRepository;
@@ -25,6 +27,9 @@ public class UsersController {
     private EncryptionService theEncryptionService;
     @Autowired
     private UserProfileRepository theUserProfileRepository;
+
+    @Autowired
+    private FidelidadRepository theFidelidadRepository;
 
     // me va a permitir listar todos los usuarios
     @GetMapping("")
@@ -91,6 +96,23 @@ public class UsersController {
 
         if (theActualUser != null && theActualRole != null) {
             theActualUser.setRole(theActualRole);
+            return this.theUserRepository.save(theActualUser);
+        } else {
+            return null;
+        }
+    }
+
+    @PutMapping("{userId}/fidelidades/{fidelidadId}")
+    public User matchFidelidad(@PathVariable String userId, @PathVariable String fidelidadId) {
+        User theActualUser = this.theUserRepository
+                .findById(userId)
+                .orElse(null);
+        Fidelidad theActualFidelidad = this.theFidelidadRepository
+                .findById(fidelidadId)
+                .orElse(null);
+
+        if (theActualUser != null && theActualFidelidad != null) {
+            theActualUser.setFidelidad(theActualFidelidad);
             return this.theUserRepository.save(theActualUser);
         } else {
             return null;

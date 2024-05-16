@@ -29,7 +29,7 @@ public class RolesController {
     /**
      * Metodo para crear un rol
      * 
-     * @param newRole Objeto de Role
+     *
      * @return el rol guardado
      */
 

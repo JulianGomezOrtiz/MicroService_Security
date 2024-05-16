@@ -20,6 +20,8 @@ public class User {
     @DBRef
     private Role role;
     @DBRef
+    private Fidelidad fidelidad;
+    @DBRef
     private UserProfile userProfile;
 
     public User(String name, String email, String password) {
@@ -65,6 +67,14 @@ public class User {
 
     public void setRole(Role role) {
         this.role = role;
+    }
+
+    public Fidelidad getFidelidad() {
+        return fidelidad;
+    }
+
+    public void setFidelidad(Fidelidad fidelidad) {
+        this.fidelidad = fidelidad;
     }
 
     public Date getCreated_at() {
