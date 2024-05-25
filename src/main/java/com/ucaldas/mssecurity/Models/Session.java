@@ -5,48 +5,69 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.util.Date;
+
 @Data
 @Document()
 public class Session {
-
     @Id
     private String _id;
-    private boolean active; // identificador de estado de sesión
-    private int code;
-
+    private String token;
+    private int token2FA;
+    private Date started_At;
+    private Date end_At;
     @DBRef
-    private User user;
+    private User theUser;
 
-    public Session(boolean active, int code) {
-        this.active = active;
-        this.code = code;
+    public Session(){}
+
+    public Session(int token2FA, User theUser){
+        this.token2FA = token2FA;
+        this.theUser = theUser;
     }
 
     public String get_id() {
         return _id;
     }
 
-    public boolean getActive() {
-        return active;
+    public String getToken() {
+        return token;
     }
 
-    public void setActive(boolean active) {
-        this.active = active;
+    public void setToken(String token) {
+        this.token = token;
     }
 
-    public int getCode() {
-        return code;
+    public int getToken2FA() {
+        return token2FA;
     }
 
-    public void setCode(int code) {
-        this.code = code;
+    public void setToken2FA(int token2FA) {
+        this.token2FA = token2FA;
     }
 
-    public User getUser() {
-        return user;
+    public Date getStarted_At() {
+        return started_At;
     }
 
-    public void setUser(User user) {
-        this.user = user;
+    public void setStarted_At(Date started_At) {
+        this.started_At = started_At;
     }
+
+    public Date getEnd_At() {
+        return end_At;
+    }
+
+    public void setEnd_At(Date end_At) {
+        this.end_At = end_At;
+    }
+
+    public User getTheUser() {
+        return theUser;
+    }
+
+    public void setTheUser(User theUser) {
+        this.theUser = theUser;
+    }
+
 }
