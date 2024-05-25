@@ -1,8 +1,6 @@
 package com.ucaldas.mssecurity.Configurations;
 
 import com.ucaldas.mssecurity.Interceptors.SecurityInterceptor;
-import com.ucaldas.mssecurity.Services.JwtService;
-import com.ucaldas.mssecurity.Interceptors.SecurityInterceptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
