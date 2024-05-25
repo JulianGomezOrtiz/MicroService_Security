@@ -4,6 +4,7 @@ import lombok.Data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.stereotype.Indexed;
 
 @Data
 @Document
@@ -16,13 +17,20 @@ public class UserProfile {
     private String address;
     private String phone_number;
 
+    private String birthday;
 
-    public UserProfile(String name, String phone_number, String address, String city_of_residence, String last_name) {
+    @DBRef
+    private User theUser;
+
+
+
+    public UserProfile(String name, String phone_number, String address, String city_of_residence, String last_name, String birthday) {
         this.name = name;
         this.last_name = last_name;
         this.city_of_residence = city_of_residence;
         this.address = address;
         this.phone_number = phone_number;
+        this.birthday = birthday;
     }
 
     public UserProfile() {
@@ -70,6 +78,19 @@ public class UserProfile {
 
     public String getCity_of_residence() {
         return city_of_residence;
+    }
+
+    public String getBirthday() {
+        return birthday;
+    }
+    public void setBirthday(String birthday) {
+        this.birthday = birthday;
+    }
+    public User getTheUser() {
+        return theUser;
+    }
+    public void setTheUser(User theUser) {
+        this.theUser = theUser;
     }
 
 }
