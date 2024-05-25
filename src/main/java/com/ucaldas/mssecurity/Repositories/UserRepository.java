@@ -6,5 +6,8 @@ import org.springframework.data.mongodb.repository.Query;
 
 public interface UserRepository extends MongoRepository<User, String> {
     @Query("{'email': ?0}")
-    public User getFidelidadbyid(String email);
+    public User getUserByEmail(String email);
+
+    @Query("{'_id': ?0}")
+    public User getUserById(String id);
 }

@@ -14,13 +14,10 @@ public class User {
     private String email;
     private String name;
     private String password;
-    private Date created_at = new Date();
-    private boolean isBlocked = false;
-    private String two_factor_code;
+
     @DBRef
     private Role role;
-    @DBRef
-    private UserProfile userProfile;
+
 
     public User(String name, String email, String password) {
         this.name = name;
@@ -67,35 +64,5 @@ public class User {
         this.role = role;
     }
 
-    public Date getCreated_at() {
-        return created_at;
-    }
 
-    public void setCreated_at(Date created_at) {
-        this.created_at = created_at;
-    }
-
-    public boolean isBlocked() {
-        return isBlocked;
-    }
-
-    public void setBlocked(boolean blocked) {
-        isBlocked = blocked;
-    }
-
-    public String getTwo_factor_code() {
-        return two_factor_code;
-    }
-
-    public void setTwo_factor_code(String two_factor_code) {
-        this.two_factor_code = two_factor_code;
-    }
-
-    public void setUserProfile(UserProfile userProfile) {
-        this.userProfile = userProfile;
-    }
-
-    public UserProfile getUserProfile(UserProfile userProfile) {
-        return this.userProfile;
-    }
 }
