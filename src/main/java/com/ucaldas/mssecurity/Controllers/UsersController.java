@@ -2,13 +2,10 @@ package com.ucaldas.mssecurity.Controllers;
 
 import com.ucaldas.mssecurity.Models.Role;
 import com.ucaldas.mssecurity.Models.User;
-import com.ucaldas.mssecurity.Models.UserProfile;
 import com.ucaldas.mssecurity.Repositories.RoleRepository;
-import com.ucaldas.mssecurity.Repositories.UserProfileRepository;
 import com.ucaldas.mssecurity.Repositories.UserRepository;
 import com.ucaldas.mssecurity.Services.JSONResponsesService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

@@ -23,8 +23,6 @@ import org.springframework.web.client.RestTemplate;
 import java.io.IOException;
 import java.security.SecureRandom;
 import java.util.*;
-import java.util.Map;
-import java.util.Optional;
 
 @CrossOrigin
 @RestController
