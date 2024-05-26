@@ -22,26 +22,28 @@ public class UserProfilesController {
     @Autowired
     private JSONResponsesService theJsonResponse;
 
-    @PostMapping("user/{id}")
+    @PostMapping("")
     public ResponseEntity<?> create(@PathVariable String id, @RequestBody UserProfile theProfile){
-        try{
-            User theUser = theUserRepository.findById(id).orElse(null);
-            if(theUser != null){
-                theProfile.setTheUser(theUser);
-                UserProfile actualProfile = this.theProfileRepository.save(theProfile);
-
-                theJsonResponse.setData(actualProfile);
-                theJsonResponse.setMessage("Se ha creado el perfil.");
-                return ResponseEntity.status(HttpStatus.OK).body(theJsonResponse.getFinalJSON());
-            }else{
-                this.theJsonResponse.setMessage("No se encontró usuario.");
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(this.theJsonResponse.getFinalJSON());
+        try {
+            UserProfile theActualProfile = this.theUserprofileRepository.getProfile(
+                    userProfile.getNumberPhone()).orElse(null);
+            if (theActualProfile != null) {
+                this.jsonResponsesService.setMessage("Ya existe un perfil con este telefono");
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                        .body(this.jsonResponsesService.getFinalJSON());
+            } else {
+                this.theUserprofileRepository.save(userProfile);
+                this.jsonResponsesService.setMessage("Perfil agregado con éxito");
+                this.jsonResponsesService.setData(userProfile);
+                return ResponseEntity.status(HttpStatus.OK)
+                        .body(this.jsonResponsesService.getFinalJSON());
             }
-        }catch (Exception e){
-            this.theJsonResponse.setData(null);
-            this.theJsonResponse.setMessage("Error al buscar usuario.");
-            this.theJsonResponse.setError(e.toString());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(this.theJsonResponse.getFinalJSON());
+        } catch (Exception e) {
+            this.jsonResponsesService.setData(null);
+            this.jsonResponsesService.setError(e.toString());
+            this.jsonResponsesService.setMessage("Error al intentar crear el perfil");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(this.jsonResponsesService.getFinalJSON());
         }
     }
 
@@ -93,23 +95,27 @@ public class UserProfilesController {
     }
 
     @GetMapping("{id}")
-    public UserProfile findByUser(@PathVariable String id){
-        try{
-            UserProfile theProfile = this.theProfileRepository.getProfilebyUserId(id);
-            System.out.println(theProfile);
-            if(theProfile != null){
-                theJsonResponse.setData(theProfile);
-                theJsonResponse.setMessage("Se ha encontrado el perfil.");
-                return theProfile;
-            }else{
-                this.theJsonResponse.setMessage("No se encontró perfil.");
-                return theProfile;
+    public ResponseEntity<?> show(@PathVariable String id) {
+        try {
+            UserProfile theUserProfile = this.theUserprofileRepository
+                    .findById(id)
+                    .orElse(null);
+            if (theUserProfile != null) {
+                this.jsonResponsesService.setData(theUserProfile);
+                this.jsonResponsesService.setMessage("Perfil encontrado con exito");
+                return ResponseEntity.status(HttpStatus.OK).body(this.jsonResponsesService.getFinalJSON());
+            } else {
+                this.jsonResponsesService.setMessage("No se encontro el perfil");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(this.jsonResponsesService.getFinalJSON());
             }
-        }catch (Exception e){
-            this.theJsonResponse.setData(null);
-            this.theJsonResponse.setMessage("Error al buscar perfil.");
-            this.theJsonResponse.setError(e.toString());
-            return null;
+        } catch (Exception e) {
+            this.jsonResponsesService.setData(null);
+            this.jsonResponsesService.setError(e.toString());
+            this.jsonResponsesService.setMessage("Error en la busqueda del perfil");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(this.jsonResponsesService.getFinalJSON());
         }
     }
+
+
 }
