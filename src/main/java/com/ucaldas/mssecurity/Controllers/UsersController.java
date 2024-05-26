@@ -28,6 +28,8 @@ public class UsersController {
     private RoleRepository theRoleRepository;
     @Autowired
     private EncryptionService thEncryptionService;
+    @Autowired
+    private  UserProfileRepository theUserProfileRepository;
 
 
     @SuppressWarnings("unused")
@@ -115,6 +117,44 @@ public class UsersController {
         }
     }
 
+    @PutMapping("{userId}/UserProfile/{userProfileId}")
+    public User matchUserProfile(@PathVariable String userId, @PathVariable String userProfileId) {
+        User theActualUser = this.userRepository
+                .findById(userId)
+                .orElse(null);
+        UserProfile theActualUserProfile = this.theUserProfileRepository
+                .findById(userProfileId)
+                .orElse(null);
+
+        if (theActualUser != null && theActualUserProfile != null) {
+            theActualUser.setUserProfile(theActualUserProfile);
+            return this.userRepository.save(theActualUser);
+        } else {
+            return null;
+        }
+    }
+
+    @PutMapping("{userId}/unmatch-userProfile/{userProfileIdId}")
+    public User unMatchUserProfile(@PathVariable String userId, @PathVariable String userProfileId) {
+        User theActualUser = this.userRepository
+                .findById(userId)
+                .orElse(null);
+        UserProfile theActualUserProfile = this.theUserProfileRepository
+                .findById(userProfileId)
+                .orElse(null);
+
+        if (theActualUser != null
+                && theActualUserProfile != null
+                && theActualUser.getUserProfile().get_id().equals(userProfileId)) {
+            theActualUser.setUserProfile(null);
+            return this.userRepository.save(theActualUser);
+        } else {
+            return null;
+        }
+    }
+
+
+
     @GetMapping("{id}")
     public User findById(@PathVariable String id) { // es ResponseEntity
         try {
@@ -152,6 +192,42 @@ public class UsersController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(this.jsonResponsesService.getFinalJSON());
         }
+    }
+
+    @PutMapping("{id}")
+    public ResponseEntity<?> udpate(@PathVariable String id, @RequestBody User theNewUser) {
+        try {
+            User theActualUser = this.userRepository.findById(id).orElse(null);
+            if (theActualUser != null) {
+                if (theActualUser.getEmail().equals(theNewUser.getEmail()) == false
+                        && this.userRepository.getUserByEmail(theNewUser.getEmail()) != null) {
+                    this.jsonResponsesService.setMessage("Este correo ya le pertenece a otro usuario");
+                    return ResponseEntity.status(HttpStatus.CONFLICT)
+                            .body(this.jsonResponsesService.getFinalJSON());
+
+                } else {
+                    theActualUser.setName(theNewUser.getName());
+                    theActualUser.setEmail(theNewUser.getEmail());
+                    theActualUser.setPassword(thEncryptionService.convertSHA256(theNewUser.getPassword()));
+                    this.userRepository.save(theActualUser);
+                    this.jsonResponsesService.setData(theActualUser);
+                    this.jsonResponsesService.setMessage("Usuario actualizado");
+                    return ResponseEntity.status(HttpStatus.OK)
+                            .body(this.jsonResponsesService.getFinalJSON());
+                }
+            } else {
+                this.jsonResponsesService.setMessage("No se encontro al usuario a actualizar");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(this.jsonResponsesService.getFinalJSON());
+
+            }
+        } catch (Exception e) {
+            this.jsonResponsesService.setData(null);
+            this.jsonResponsesService.setError(e.toString());
+            this.jsonResponsesService.setMessage("Error en la actualizacion del usuario");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(this.jsonResponsesService.getFinalJSON());
+        }
+
     }
 
     @DeleteMapping("{id}")

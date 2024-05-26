@@ -19,8 +19,7 @@ public class UserProfile {
 
     private String birthday;
 
-    @DBRef
-    private User theUser;
+
 
 
 
@@ -86,11 +85,6 @@ public class UserProfile {
     public void setBirthday(String birthday) {
         this.birthday = birthday;
     }
-    public User getTheUser() {
-        return theUser;
-    }
-    public void setTheUser(User theUser) {
-        this.theUser = theUser;
-    }
+
 
 }
