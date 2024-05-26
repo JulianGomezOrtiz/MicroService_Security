@@ -2,7 +2,9 @@ package com.ucaldas.mssecurity.Controllers;
 
 import com.ucaldas.mssecurity.Models.Role;
 import com.ucaldas.mssecurity.Models.User;
+import com.ucaldas.mssecurity.Models.UserProfile;
 import com.ucaldas.mssecurity.Repositories.RoleRepository;
+import com.ucaldas.mssecurity.Repositories.UserProfileRepository;
 import com.ucaldas.mssecurity.Repositories.UserRepository;
 import com.ucaldas.mssecurity.Services.JSONResponsesService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,7 +28,7 @@ public class UsersController {
     @Autowired
     private EncryptionService thEncryptionService;
     @Autowired
-    private  UserProfileRepository theUserProfileRepository;
+    private UserProfileRepository theUserProfileRepository;
 
 
     @SuppressWarnings("unused")
@@ -114,39 +116,62 @@ public class UsersController {
         }
     }
 
-    @PutMapping("{userId}/UserProfile/{userProfileId}")
-    public User matchUserProfile(@PathVariable String userId, @PathVariable String userProfileId) {
-        User theActualUser = this.userRepository
-                .findById(userId)
-                .orElse(null);
-        UserProfile theActualUserProfile = this.theUserProfileRepository
-                .findById(userProfileId)
-                .orElse(null);
-
-        if (theActualUser != null && theActualUserProfile != null) {
-            theActualUser.setUserProfile(theActualUserProfile);
-            return this.userRepository.save(theActualUser);
-        } else {
-            return null;
+    @PutMapping("user/{user_id}/user_profile/{user_profile_id}")
+    public ResponseEntity<?> matchUserProfile(@PathVariable String user_id,
+                                              @PathVariable String user_profile_id) {
+        try {
+            User theActualUser = this.userRepository.findById(user_id)
+                    .orElse(null);
+            UserProfile theUserProfile = this.theUserProfileRepository.findById(user_profile_id)
+                    .orElse(null);
+            if (theActualUser != null && theUserProfile != null) {
+                theActualUser.setUserProfile(theUserProfile);
+                this.userRepository.save(theActualUser);
+                this.jsonResponsesService.setData(theActualUser);
+                this.jsonResponsesService.setMessage("Se añadio correctamente el perfil al usuario");
+                return ResponseEntity.status(HttpStatus.OK)
+                        .body(this.jsonResponsesService.getFinalJSON());
+            } else {
+                if (theActualUser == null) {
+                    this.jsonResponsesService.setMessage("No se encontro al usuario");
+                    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(this.jsonResponsesService.getFinalJSON());
+                } else {
+                    this.jsonResponsesService.setMessage("No se encontro el perfil");
+                    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(this.jsonResponsesService.getFinalJSON());
+                }
+            }
+        } catch (Exception e) {
+            this.jsonResponsesService.setData(null);
+            this.jsonResponsesService.setError(e.toString());
+            this.jsonResponsesService.setMessage("Error al añadir el perfil al usuario");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(this.jsonResponsesService.getFinalJSON());
         }
     }
 
-    @PutMapping("{userId}/unmatch-userProfile/{userProfileIdId}")
-    public User unMatchUserProfile(@PathVariable String userId, @PathVariable String userProfileId) {
-        User theActualUser = this.userRepository
-                .findById(userId)
-                .orElse(null);
-        UserProfile theActualUserProfile = this.theUserProfileRepository
-                .findById(userProfileId)
-                .orElse(null);
 
-        if (theActualUser != null
-                && theActualUserProfile != null
-                && theActualUser.getUserProfile().get_id().equals(userProfileId)) {
-            theActualUser.setUserProfile(null);
-            return this.userRepository.save(theActualUser);
-        } else {
-            return null;
+    @PutMapping("user/{user_id}/user_profile")
+    public ResponseEntity<?> unMatchUserProfile(@PathVariable String user_id) {
+        try {
+            User theActualUser = this.userRepository.findById(user_id)
+                    .orElse(null);
+            if (theActualUser != null) {
+                theActualUser.setUserProfile(null);
+                this.userRepository.save(theActualUser);
+                this.jsonResponsesService.setData(theActualUser);
+                this.jsonResponsesService.setMessage("Se removio correctamente el perfil al usuario");
+                return ResponseEntity.status(HttpStatus.OK)
+                        .body(this.jsonResponsesService.getFinalJSON());
+            } else {
+                this.jsonResponsesService.setMessage("No se encontro al usuario");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(this.jsonResponsesService.getFinalJSON());
+            }
+        } catch (Exception e) {
+            this.jsonResponsesService.setData(null);
+            this.jsonResponsesService.setError(e.toString());
+            this.jsonResponsesService.setMessage("Error al remover el perfil al usuario");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(this.jsonResponsesService.getFinalJSON());
         }
     }
 

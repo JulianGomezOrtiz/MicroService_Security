@@ -17,33 +17,31 @@ import org.springframework.web.bind.annotation.*;
 public class UserProfilesController {
     @Autowired
     private UserProfileRepository theProfileRepository;
-    @Autowired
-    private UserRepository theUserRepository;
+
     @Autowired
     private JSONResponsesService theJsonResponse;
 
     @PostMapping("")
     public ResponseEntity<?> create(@PathVariable String id, @RequestBody UserProfile theProfile){
         try {
-            UserProfile theActualProfile = this.theUserprofileRepository.getProfile(
-                    userProfile.getNumberPhone()).orElse(null);
+            UserProfile theActualProfile = this.theProfileRepository.getProfile( theProfile.getPhone_number()).orElse(null);
             if (theActualProfile != null) {
-                this.jsonResponsesService.setMessage("Ya existe un perfil con este telefono");
+                this.theJsonResponse.setMessage("Ya existe un perfil con este telefono");
                 return ResponseEntity.status(HttpStatus.CONFLICT)
-                        .body(this.jsonResponsesService.getFinalJSON());
+                        .body(this.theJsonResponse.getFinalJSON());
             } else {
-                this.theUserprofileRepository.save(userProfile);
-                this.jsonResponsesService.setMessage("Perfil agregado con éxito");
-                this.jsonResponsesService.setData(userProfile);
+                this.theProfileRepository.save(theProfile);
+                this.theJsonResponse.setMessage("Perfil agregado con éxito");
+                this.theJsonResponse.setData(theProfile);
                 return ResponseEntity.status(HttpStatus.OK)
-                        .body(this.jsonResponsesService.getFinalJSON());
+                        .body(this.theJsonResponse.getFinalJSON());
             }
         } catch (Exception e) {
-            this.jsonResponsesService.setData(null);
-            this.jsonResponsesService.setError(e.toString());
-            this.jsonResponsesService.setMessage("Error al intentar crear el perfil");
+            this.theJsonResponse.setData(null);
+            this.theJsonResponse.setError(e.toString());
+            this.theJsonResponse.setMessage("Error al intentar crear el perfil");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(this.jsonResponsesService.getFinalJSON());
+                    .body(this.theJsonResponse.getFinalJSON());
         }
     }
 
@@ -97,23 +95,23 @@ public class UserProfilesController {
     @GetMapping("{id}")
     public ResponseEntity<?> show(@PathVariable String id) {
         try {
-            UserProfile theUserProfile = this.theUserprofileRepository
+            UserProfile theUserProfile = this.theProfileRepository
                     .findById(id)
                     .orElse(null);
             if (theUserProfile != null) {
-                this.jsonResponsesService.setData(theUserProfile);
-                this.jsonResponsesService.setMessage("Perfil encontrado con exito");
-                return ResponseEntity.status(HttpStatus.OK).body(this.jsonResponsesService.getFinalJSON());
+                this.theJsonResponse.setData(theUserProfile);
+                this.theJsonResponse.setMessage("Perfil encontrado con exito");
+                return ResponseEntity.status(HttpStatus.OK).body(this.theJsonResponse.getFinalJSON());
             } else {
-                this.jsonResponsesService.setMessage("No se encontro el perfil");
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(this.jsonResponsesService.getFinalJSON());
+                this.theJsonResponse.setMessage("No se encontro el perfil");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(this.theJsonResponse.getFinalJSON());
             }
         } catch (Exception e) {
-            this.jsonResponsesService.setData(null);
-            this.jsonResponsesService.setError(e.toString());
-            this.jsonResponsesService.setMessage("Error en la busqueda del perfil");
+            this.theJsonResponse.setData(null);
+            this.theJsonResponse.setError(e.toString());
+            this.theJsonResponse.setMessage("Error en la busqueda del perfil");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(this.jsonResponsesService.getFinalJSON());
+                    .body(this.theJsonResponse.getFinalJSON());
         }
     }
 
